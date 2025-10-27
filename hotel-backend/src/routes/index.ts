@@ -16,7 +16,7 @@ router.use('/bookings',bookingRoutes);
 router.use('/payments',paymentRoutes);
 router.use('/reviews',reviewRoutes);
 router.use('/search', searchRoutes);
-router.use('/userRoutes', userRoutes);
+router.use('/users', userRoutes);
 router.use('/upload', uploadRoutes);
 
 export default router;
