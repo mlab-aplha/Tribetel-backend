@@ -1,4 +1,4 @@
-import { Model, DataTypes, Sequelize, Optional } from 'sequelize';
+import { Model, DataTypes, Sequelize, Optional } from "sequelize";
 
 interface HotelImageAttributes {
   id: string;
@@ -12,16 +12,16 @@ interface HotelImageAttributes {
   updatedAt?: Date;
 }
 
-interface HotelImageCreationAttributes 
-  extends Optional<HotelImageAttributes, 
-    'id' | 
-    'public_id' | 
-    'is_primary' | 
-    'caption' | 
-    'display_order'
+interface HotelImageCreationAttributes
+  extends Optional<
+    HotelImageAttributes,
+    "id" | "public_id" | "is_primary" | "caption" | "display_order"
   > {}
 
-class HotelImage extends Model<HotelImageAttributes, HotelImageCreationAttributes> implements HotelImageAttributes {
+class HotelImage
+  extends Model<HotelImageAttributes, HotelImageCreationAttributes>
+  implements HotelImageAttributes
+{
   public id!: string;
   public hotel_id!: string;
   public url!: string;
@@ -34,51 +34,51 @@ class HotelImage extends Model<HotelImageAttributes, HotelImageCreationAttribute
   public readonly updatedAt!: Date;
 }
 
-export const initHotelImageModel = (sequelize: Sequelize): typeof HotelImage => {
+export const initHotelImageModel = (
+  sequelize: Sequelize
+): typeof HotelImage => {
   HotelImage.init(
     {
       id: {
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
-        primaryKey: true
+        primaryKey: true,
       },
       hotel_id: {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-          model: 'hotels',
-          key: 'id'
+          model: "hotels",
+          key: "id",
         },
-        onDelete: 'CASCADE'
+        onDelete: "CASCADE",
       },
       url: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: false,
       },
       public_id: {
         type: DataTypes.STRING,
-        allowNull: true
+        allowNull: true,
       },
       is_primary: {
         type: DataTypes.BOOLEAN,
-        defaultValue: false
+        defaultValue: false,
       },
       caption: {
         type: DataTypes.STRING,
-        allowNull: true
+        allowNull: true,
       },
       display_order: {
         type: DataTypes.INTEGER,
-        defaultValue: 0
-      }
+        defaultValue: 0,
+      },
     },
     {
       sequelize,
-      tableName: 'hotel_images',
+      tableName: "hotel_images",
       timestamps: true,
-      indexes: [
-        { fields: ['hotel_id'] }
-      ]
+      indexes: [{ fields: ["hotel_id"] }],
     }
   );
 

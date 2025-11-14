@@ -1,253 +1,75 @@
-import { User, Hotel, Room, Booking, Payment, Review } from "../models";
+import { sequelize } from "../config/database";
+import { initUserModel } from "./User";
+import { initHotelModel } from "./Hotel";
+import { initRoomModel } from "./Room";
+import { initBookingModel } from "./Booking";
+import { initPaymentModel } from "./Payment";
+import { initReviewModel } from "./Review";
+import { initFavoriteModel } from "./Favorite";
+import { initHotelImageModel } from "./HotelImage";
+import { initAmenityModel } from "./Amenity";
+import { initHotelAmenityModel } from "./HotelAmenity";
 
-// API Response Types
-export interface ApiResponse<T = any> {
-  success: boolean;
-  message?: string;
-  data?: T;
-  errors?: ValidationError[];
-}
+// Initialize all models
+const User = initUserModel(sequelize);
+const Hotel = initHotelModel(sequelize);
+const Room = initRoomModel(sequelize);
+const Booking = initBookingModel(sequelize);
+const Payment = initPaymentModel(sequelize);
+const Review = initReviewModel(sequelize);
+const Favorite = initFavoriteModel(sequelize);
+const HotelImage = initHotelImageModel(sequelize);
+const Amenity = initAmenityModel(sequelize);
+const HotelAmenity = initHotelAmenityModel(sequelize);
 
-export interface ValidationError {
-  field: string;
-  message: string;
-}
+// Define relationships
+User.hasMany(Booking, { foreignKey: "user_id", as: "bookings" });
+User.hasMany(Review, { foreignKey: "user_id", as: "reviews" });
+User.hasMany(Favorite, { foreignKey: "user_id", as: "favorites" });
 
-export interface PaginatedResponse<T> {
-  success: boolean;
-  data: T[];
-  pagination: PaginationInfo;
-}
+Hotel.hasMany(Room, { foreignKey: "hotel_id", as: "rooms" });
+Hotel.hasMany(Review, { foreignKey: "hotel_id", as: "reviews" });
+Hotel.hasMany(Favorite, { foreignKey: "hotel_id", as: "favorites" });
+Hotel.hasMany(HotelImage, { foreignKey: "hotel_id", as: "images" });
+Hotel.belongsToMany(Amenity, {
+  through: HotelAmenity,
+  foreignKey: "hotel_id",
+  as: "amenities",
+});
 
-export interface PaginationInfo {
-  currentPage: number;
-  totalPages: number;
-  totalItems: number;
-  itemsPerPage: number;
-  hasNextPage: boolean;
-  hasPrevPage: boolean;
-}
+Room.belongsTo(Hotel, { foreignKey: "hotel_id", as: "hotel" });
+Room.hasMany(Booking, { foreignKey: "room_id", as: "bookings" });
 
-// Auth Types
-export interface JwtPayload {
-  id: string;
-  iat?: number;
-  exp?: number;
-}
+Booking.belongsTo(User, { foreignKey: "user_id", as: "user" });
+Booking.belongsTo(Room, { foreignKey: "room_id", as: "room" });
+Booking.hasOne(Payment, { foreignKey: "booking_id", as: "payment" });
 
-export interface TokenResponse {
-  success: boolean;
-  token: string;
-  refreshToken: string;
-  user: User;
-}
+Payment.belongsTo(Booking, { foreignKey: "booking_id", as: "booking" });
 
-// Request Body Types
-export interface RegisterRequest {
-  email: string;
-  password: string;
-  first_name: string;
-  last_name: string;
-  phone_number?: string;
-}
+Review.belongsTo(User, { foreignKey: "user_id", as: "user" });
+Review.belongsTo(Hotel, { foreignKey: "hotel_id", as: "hotel" });
 
-export interface LoginRequest {
-  email: string;
-  password: string;
-}
+Favorite.belongsTo(User, { foreignKey: "user_id", as: "user" });
+Favorite.belongsTo(Hotel, { foreignKey: "hotel_id", as: "hotel" });
 
-export interface UpdatePasswordRequest {
-  currentPassword: string;
-  newPassword: string;
-}
+HotelImage.belongsTo(Hotel, { foreignKey: "hotel_id", as: "hotel" });
 
-export interface ForgotPasswordRequest {
-  email: string;
-}
+Amenity.belongsToMany(Hotel, {
+  through: HotelAmenity,
+  foreignKey: "amenity_id",
+  as: "hotels",
+});
 
-export interface ResetPasswordRequest {
-  password: string;
-}
-
-// Hotel Types
-export interface CreateHotelRequest {
-  name: string;
-  description: string;
-  address: string;
-  city: string;
-  state: string;
-  country: string;
-  postal_code: string;
-  latitude?: number;
-  longitude?: number;
-  star_rating: number;
-  phone_number: string;
-  email: string;
-  website?: string;
-  check_in_time?: string;
-  check_out_time?: string;
-  policies?: Record<string, any>;
-  amenity_ids?: string[];
-}
-
-export interface UpdateHotelRequest extends Partial<CreateHotelRequest> {}
-
-export interface HotelSearchQuery {
-  page?: string;
-  limit?: string;
-  city?: string;
-  country?: string;
-  min_price?: string;
-  max_price?: string;
-  star_rating?: string;
-  amenities?: string;
-  search?: string;
-}
-
-// Room Types
-export interface CreateRoomRequest {
-  room_type: string;
-  description?: string;
-  price_per_night: number;
-  capacity: number;
-  size_sqm?: number;
-  bed_type: string;
-  number_of_beds?: number;
-  total_rooms: number;
-  amenities?: Record<string, any>;
-  images?: string[];
-}
-
-export interface UpdateRoomRequest extends Partial<CreateRoomRequest> {}
-
-export interface RoomAvailabilityQuery {
-  check_in?: string;
-  check_out?: string;
-  number_of_rooms?: string;
-  guests?: string;
-}
-
-// Booking Types
-export interface CreateBookingRequest {
-  room_id: string;
-  check_in_date: string;
-  check_out_date: string;
-  number_of_guests: number;
-  number_of_rooms?: number;
-  special_requests?: string;
-  guest_name: string;
-  guest_email: string;
-  guest_phone: string;
-}
-
-export interface UpdateBookingStatusRequest {
-  status: "pending" | "confirmed" | "checked_in" | "checked_out" | "cancelled";
-}
-
-export interface CancelBookingRequest {
-  cancellation_reason?: string;
-}
-
-export interface BookingQuery {
-  page?: string;
-  limit?: string;
-  status?: string;
-  hotel_id?: string;
-  date_from?: string;
-  date_to?: string;
-}
-
-// Review Types
-export interface CreateReviewRequest {
-  hotel_id: string;
-  rating: number;
-  title: string;
-  comment: string;
-  cleanliness_rating?: number;
-  service_rating?: number;
-  location_rating?: number;
-  value_rating?: number;
-}
-
-export interface UpdateReviewRequest extends Partial<CreateReviewRequest> {}
-
-export interface ReviewQuery {
-  page?: string;
-  limit?: string;
-  sort?: "recent" | "highest" | "lowest";
-}
-
-// Payment Types
-export interface ConfirmPaymentRequest {
-  payment_intent_id: string;
-}
-
-export interface StripeWebhookEvent {
-  type: string;
-  data: {
-    object: any;
-  };
-}
-
-// Favorite Types
-export interface AddFavoriteRequest {
-  hotel_id: string;
-}
-
-// Amenity Types
-export interface CreateAmenityRequest {
-  name: string;
-  category:
-    | "general"
-    | "room"
-    | "bathroom"
-    | "kitchen"
-    | "entertainment"
-    | "outdoor"
-    | "service";
-  icon?: string;
-}
-
-export interface UpdateAmenityRequest extends Partial<CreateAmenityRequest> {}
-
-// User Types
-export interface UpdateProfileRequest {
-  first_name?: string;
-  last_name?: string;
-  phone_number?: string;
-}
-
-export interface UserSearchQuery {
-  page?: string;
-  limit?: string;
-  role?: "user" | "admin";
-  search?: string;
-}
-
-// Email Types
-export interface EmailOptions {
-  to: string;
-  subject: string;
-  html: string;
-}
-
-export interface BookingEmailData {
-  id: string;
-  hotelName: string;
-  checkIn: string;
-  checkOut: string;
-  totalPrice: number;
-}
-
-// Cloudinary Types
-export interface CloudinaryUploadResult {
-  url: string;
-  public_id: string;
-}
-
-// Stripe Types
-export interface StripePaymentIntentMetadata {
-  booking_id: string;
-  user_id: string;
-  hotel_name: string;
-}
+export {
+  sequelize,
+  User,
+  Hotel,
+  Room,
+  Booking,
+  Payment,
+  Review,
+  Favorite,
+  HotelImage,
+  Amenity,
+  HotelAmenity,
+};

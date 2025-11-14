@@ -53,7 +53,7 @@ export const initHotelAmenityModel = (
       timestamps: false,
       indexes: [{ unique: true, fields: ["hotel_id", "amenity_id"] }],
     }
-  );    
+  );
 
   return HotelAmenity;
 };
